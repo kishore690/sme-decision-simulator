@@ -1,0 +1,28 @@
+# =========================
+# Python
+# =========================
+Backend/venv/
+Backend/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# =========================
+# Node / React
+# =========================
+sme-app/node_modules/
+sme-app/dist/
+sme-app/.vite/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
