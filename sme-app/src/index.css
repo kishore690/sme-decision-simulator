@@ -5,3 +5,51 @@
 html, body, #root {
   height: 100%;
 }
+
+:root {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgb(204 238 232 / 48%), transparent 38rem),
+    radial-gradient(ellipse at 92% 18%, rgb(220 231 246 / 58%), transparent 42rem),
+    #f5f7fa;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgb(13 148 136 / 35%);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #ccece7;
+  color: #123d3a;
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", "Cascadia Mono", monospace;
+}
+
+.tabular-nums {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+input[type=range] { -webkit-appearance: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; }

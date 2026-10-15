@@ -10,12 +10,27 @@ function AnswerCard({ T, answer }) {
   const reasonMatch = answer.match(/Reason[:\s]*([\s\S]*?)(?=Recommendations:|$)/i);
   const recsMatch = answer.match(/Recommendations[:\s]*([\s\S]*?)$/i);
 
-  const hasStructure = decisionMatch && reasonMatch;
+  const hasStructure = /^\s*Decision\s*:/i.test(answer) && decisionMatch && reasonMatch;
 
   if (!hasStructure) {
     return (
-      <div className={cn("rounded-2xl p-5", T.dark ? "bg-slate-800" : "bg-gray-50")}>
-        <p className={cn("text-sm leading-relaxed", T.text)}>{answer}</p>
+      <div className={cn("rounded-2xl border p-5", T.dark ? "bg-slate-900/70 border-slate-700" : "bg-white/75 border-slate-200")}>
+        <div className={cn("space-y-2 text-sm leading-relaxed", T.text)}>
+          {answer.split("\n").map((line, index) => {
+            const trimmed = line.trim();
+            if (!trimmed) return <div key={index} className="h-1" />;
+            if (/^#{1,3}\s/.test(trimmed)) {
+              return <h3 key={index} className="pt-2 font-semibold">{trimmed.replace(/^#{1,3}\s+/, "")}</h3>;
+            }
+            if (/^[-*]\s/.test(trimmed)) {
+              return <p key={index} className="pl-4">• {trimmed.replace(/^[-*]\s+/, "")}</p>;
+            }
+            const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
+            return <p key={index}>{parts.map((part, partIndex) => part.startsWith("**") && part.endsWith("**")
+              ? <strong key={partIndex}>{part.slice(2, -2)}</strong>
+              : part)}</p>;
+          })}
+        </div>
       </div>
     );
   }
@@ -95,15 +110,15 @@ export default function AIAdvisor({ T }) {
     setAnswer(null);
     setError(null);
 
-    const response = await askAI(q);
-
-    if (!response || response.error) {
-      setError(response?.error || "Unable to reach the AI advisor.");
+    try {
+      const response = await askAI(q);
+      if (!response || response.error) throw new Error(response?.error || "Unable to reach the AI advisor.");
+      setAnswer(response.answer);
+    } catch (err) {
+      setError(err.message || "Unable to reach the AI advisor.");
       setLoading(false);
       return;
     }
-
-    setAnswer(response.answer);
     setLoading(false);
   };
 
@@ -137,7 +152,7 @@ export default function AIAdvisor({ T }) {
               value={question}
               onChange={e => setQuestion(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Ask anything about your business — hiring, pricing, loans, risk, expansion..."
+              placeholder="Ask about sales trends, product performance, pricing, hiring, or a business decision..."
               rows={4}
               className={cn(
                 "w-full bg-transparent outline-none text-sm resize-none leading-relaxed",
@@ -151,7 +166,7 @@ export default function AIAdvisor({ T }) {
                 disabled={!question.trim()}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white transition-opacity",
-                  question.trim() ? "bg-gradient-to-r from-blue-600 to-emerald-500 hover:opacity-90" : "bg-slate-400 cursor-not-allowed opacity-60"
+                  question.trim() ? "bg-teal-800 hover:bg-teal-900" : "bg-slate-400 cursor-not-allowed opacity-60"
                 )}
               >
                 <Send size={14} /> Ask AI

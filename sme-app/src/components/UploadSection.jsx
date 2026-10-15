@@ -32,9 +32,9 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
         setProgress(null);
         setError(result.error || "Upload failed.");
       }
-    } catch {
+    } catch (err) {
       setProgress(null);
-      setError("Unable to connect to backend.");
+      setError(err.message || "Unable to connect to backend.");
     }
   };
 
@@ -44,11 +44,31 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
     addToast(`${key[0].toUpperCase() + key.slice(1)} data uploaded`);
   };
 
-  const demo = () => {
-    const all = {};
-    UPLOAD_TYPES.forEach((t) => (all[t.key] = true));
-    setUploaded(all);
-    addToast("Demo dataset loaded — all data sources connected");
+  const demo = async () => {
+    setError(null);
+    setProgress(10);
+    try {
+      const sampleResponse = await fetch("/demo-sales.csv");
+      if (!sampleResponse.ok) throw new Error("Could not download the sample dataset.");
+      const csv = await sampleResponse.text();
+      const file = new File([csv], "sme-demo-sales.csv", { type: "text/csv" });
+      const result = await uploadCSV(file);
+      setProgress(100);
+      if (!result.success) throw new Error(result.error || "Could not load the demo dataset.");
+
+      const all = {};
+      UPLOAD_TYPES.forEach((t) => (all[t.key] = true));
+      setUploaded(all);
+      if (onUploaded) await onUploaded();
+      addToast("Demo sales data loaded");
+      setTimeout(() => {
+        setProgress(null);
+        setPage("dashboard");
+      }, 300);
+    } catch (err) {
+      setProgress(null);
+      setError(err.message || "Unable to load the demo dataset.");
+    }
   };
 
   const handleDrop = (e) => {
@@ -80,7 +100,7 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
       <div className="text-center mb-10">
         <h1 className={cn("text-3xl font-semibold tracking-tight", T.text)}>Upload your business data</h1>
         <p className={cn("mt-2 text-sm", T.textMuted)}>
-          We'll calculate your health score and power simulations from your CSV files.
+          Upload your own sales CSV, or use the sample file to explore the dashboard and simulations.
         </p>
       </div>
 
@@ -107,7 +127,7 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
             <p className={cn("text-sm font-medium", T.text)}>Uploading...</p>
             <div className="relative h-2 rounded-full w-full max-w-xs mx-auto" style={{ background: T.dark ? "#1e293b" : "#e5e7eb" }}>
               <div
-                className="absolute h-2 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-150"
+                className="absolute h-2 rounded-full bg-teal-700 transition-all duration-150"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -128,10 +148,18 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
             <p className={cn("text-xs mt-1", T.textMuted)}>or click to browse — max 10 MB</p>
             <button
               onClick={(e) => { e.stopPropagation(); demo(); }}
-              className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs font-medium hover:opacity-90 transition-opacity"
+              className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-800 text-white text-xs font-medium hover:bg-teal-900 transition-colors"
             >
               <Sparkles size={12} /> Load Demo Dataset
             </button>
+            <a
+              href="/demo-sales.csv"
+              download="sme-demo-sales.csv"
+              onClick={(e) => e.stopPropagation()}
+              className={cn("mt-3 inline-flex items-center rounded px-2 py-1 text-xs font-medium underline underline-offset-4", T.accentBlue)}
+            >
+              Download sample CSV
+            </a>
           </>
         )}
       </div>
@@ -175,7 +203,7 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
           <p className={cn("text-xs mb-3", T.textMuted)}>{count} of {UPLOAD_TYPES.length} data sources connected</p>
           <button
             onClick={() => setPage("dashboard")}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-teal-800 text-white text-sm font-medium hover:bg-teal-900 transition-colors"
           >
             View Dashboard <ArrowRight size={15} />
           </button>

@@ -4,6 +4,8 @@ Backend/__pycache__/
 **/__pycache__/
 *.pyc
 .env
+backend-local*.log
+frontend-local*.log
 
 # Node
 sme-app/node_modules/

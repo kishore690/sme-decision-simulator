@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { lazy, Suspense, useState, useEffect } from "react";
 import { MessageSquare } from "lucide-react";
 
 import { getTheme } from "./utils/theme";
@@ -10,7 +10,7 @@ import { useToasts } from "./hooks/useToasts";
 import { useSimulator } from "./hooks/useSimulator";
 
 import Navbar from "./components/Navbar";
-import Dashboard from "./components/Dashboard";
+const Dashboard = lazy(() => import("./components/Dashboard"));
 import Simulator from "./components/Simulator";
 import AIAdvisor from "./components/AIAdvisor";
 import Reports from "./components/Reports";
@@ -47,7 +47,7 @@ export default function App() {
     switch (page) {
       case "landing":   return <LandingPage setPage={setPage} T={T} />;
       case "upload":    return <UploadSection T={T} setPage={setPage} addToast={addToast} uploaded={uploaded} setUploaded={setUploaded} onUploaded={refetchDashboard} />;
-      case "dashboard": return <Dashboard T={T} loading={loading || dashboardLoading} data={dashboardViewData} chartData={chartData} error={dashboardError} />;
+      case "dashboard": return <Suspense fallback={<div className="p-8 text-center" role="status">Loading dashboard…</div>}><Dashboard T={T} loading={loading || dashboardLoading} data={dashboardViewData} chartData={chartData} error={dashboardError} /></Suspense>;
       case "simulator": return <Simulator T={T} sim={sim} setSim={setSim} onSimulate={runSimulation} results={results} simulating={simulating} dashboardData={dashboardData} />;
       case "advisor":   return <AIAdvisor T={T} />;
       case "compare":   return <CompareScenarios T={T} dashboardData={dashboardData} />;
@@ -59,16 +59,6 @@ export default function App() {
 
   return (
     <div className={cn("min-h-screen font-sans transition-colors duration-300", T.page, T.text)}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
-        .font-sans { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
-        h1, h2, h3 { font-family: 'Space Grotesk', 'Inter', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
-        input[type=range] { -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; }
-      `}</style>
-
       <Navbar page={page} setPage={setPage} T={T} dark={dark} setDark={setDark} addToast={addToast} />
 
       <div key={page} style={{ animation: "fadeIn 0.35s ease-out" }}>
@@ -78,7 +68,9 @@ export default function App() {
       {page !== "advisor" && (
         <button
           onClick={() => setPage("advisor")}
-          className="fixed bottom-6 left-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+          className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-teal-800 text-white shadow-lg shadow-slate-900/15 flex items-center justify-center transition-colors hover:bg-teal-900"
+          aria-label="Open business advisor"
+          title="Open business advisor"
         >
           <MessageSquare size={20} className="text-white" />
         </button>

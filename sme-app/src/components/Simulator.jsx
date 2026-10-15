@@ -171,7 +171,7 @@ function SimulatorForm({ sim, T, onClose, results, simulating, onSimulate, error
             className={cn(
               "w-full py-3 rounded-xl text-sm font-medium text-white transition-opacity flex items-center justify-center gap-2",
               simulating ? "opacity-60 cursor-not-allowed" : "hover:opacity-90",
-              "bg-gradient-to-r from-blue-600 to-emerald-500"
+              "bg-teal-800 hover:bg-teal-900"
             )}
           >
             {simulating ? (

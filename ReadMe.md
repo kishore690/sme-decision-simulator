@@ -91,6 +91,25 @@ SME-Decision-Simulator/
 
 ## ⚙ Installation
 
+## 🚢 Production deployment (Docker)
+
+The included Compose setup serves the built frontend through Nginx and proxies `/api` to FastAPI. It exposes only the frontend port; the API is not published directly. Put TLS termination in front of port 8080 using your hosting provider or reverse proxy.
+
+1. Install Docker Engine and the Docker Compose plugin.
+2. For deployment, provide `GEMINI_API_KEY` through the host's environment/secret manager; the key is optional because a local recommendation fallback is available. `Backend/.env.example` lists the supported backend settings.
+3. From the repository root, run `docker compose up --build -d`.
+4. Open `http://localhost:8080`; check service status with `docker compose ps` and API health at `http://localhost:8080/api/health`.
+
+Set `APP_PORT` to change the published port. `MAX_UPLOAD_BYTES` defaults to 10 MiB. `CORS_ORIGINS` is a comma-separated origin allowlist for direct API access; the bundled same-origin Nginx setup does not require cross-origin access. Do not put production secrets in committed files.
+
+### Deployment scope
+
+This deployment is a single-instance demonstration deployment. Uploaded CSV data is stored in process memory and shared by all visitors to that backend process; it disappears on restart, and multiple backend replicas would not share it. There is no authentication or tenant isolation. Do not use it with confidential or real customer financial data until authentication, per-user authorization, isolated durable storage, retention/deletion controls, and operational monitoring are implemented. Configure HTTPS at the hosting edge before exposing the service publicly.
+
+The backend accepts CSV uploads up to 10 MiB with at most 500,000 rows and validates required columns and numeric values. The browser build uses `/api` in the container; set `VITE_API_BASE_URL` to an absolute API URL when building the frontend for a separate frontend host.
+
+### Local development
+
 ### Clone Repository
 
 ```bash
@@ -99,7 +118,7 @@ git clone https://github.com/yourusername/sme-decision-simulator.git
 
 ---
 
-### Backend
+#### Backend
 
 ```bash
 cd backend
@@ -121,7 +140,7 @@ http://127.0.0.1:8000
 
 ---
 
-### Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -153,9 +172,9 @@ http://localhost:5173
 
 ## 🧠 AI Recommendation System
 
-The application first attempts to generate recommendations using the Google Gemini API.
+With `GEMINI_API_KEY` configured, the advisor uses Gemini to answer open-ended questions against compact summaries of the uploaded sales data, including product mix and monthly performance. It labels modeled expense/cash values as estimates and should identify missing business data instead of treating it as fact. Repeated questions for the same dataset are cached, and model requests have a configurable timeout.
 
-If Gemini is unavailable or the API quota is exceeded, a built-in rule-based recommendation engine automatically generates business recommendations, ensuring uninterrupted user experience.
+Without a valid API key, the local fallback can answer basic questions about sales totals and product performance. It cannot perform general or complicated reasoning; add a valid key to enable those answers. Configure `GEMINI_MODEL` and `AI_TIMEOUT_MS` as needed. Sales files do not include verified expenses, balances, unit costs, customer counts, or inventory, so questions requiring those facts need the corresponding data before they can be answered reliably.
 
 ---
 

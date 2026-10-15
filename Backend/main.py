@@ -1,10 +1,13 @@
-from fastapi import FastAPI, UploadFile, File
+import os
+
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+import numpy as np
 import pandas as pd
 from business import get_business_metrics
-from ai import ask_ai
+from ai import ask_ai, ask_business_question
 from simulator import simulate_hiring
 from price_simulator import simulate_price_change
 from marketing_simulator import simulate_marketing
@@ -18,56 +21,116 @@ from reports import (
     generate_csv_report,
     generate_pdf_report,
 )
-app = FastAPI()
+app = FastAPI(title="SME Decision Simulator API", version="1.0.0")
 
 # Store uploaded CSV in memory
 uploaded_data = None
+uploaded_business_context = None
 
 # Allow React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[origin.strip() for origin in os.getenv(
+        "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",") if origin.strip()],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 REQUIRED_COLUMNS = ["Date", "Product", "Quantity", "Revenue"]
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+
+
+def build_business_context(df):
+    """Summarize the uploaded sales data once, keeping prompts compact and grounded."""
+    revenue = float(df["Revenue"].sum())
+    metrics = get_business_metrics(df)
+    product_totals = (
+        df.groupby("Product", dropna=False)
+        .agg(quantity=("Quantity", "sum"), revenue=("Revenue", "sum"))
+        .sort_values("revenue", ascending=False)
+    )
+    products = [
+        {
+            "name": str(name)[:100],
+            "quantity": round(float(row["quantity"]), 2),
+            "revenue": round(float(row["revenue"]), 2),
+            "revenueSharePct": round(float(row["revenue"]) / revenue * 100, 1) if revenue else 0,
+        }
+        for name, row in product_totals.head(10).iterrows()
+    ]
+
+    dates = pd.to_datetime(df["Date"], errors="coerce")
+    valid_dates = dates.dropna()
+    monthly_revenue = []
+    best_sales_day = None
+    if not valid_dates.empty:
+        dated = df.loc[valid_dates.index, ["Revenue"]].copy()
+        dated["month"] = valid_dates.dt.to_period("M").astype(str)
+        monthly = dated.groupby("month")["Revenue"].sum().sort_index()
+        monthly_revenue = [
+            {"month": month, "revenue": round(float(amount), 2)}
+            for month, amount in monthly.tail(24).items()
+        ]
+        dated["date"] = valid_dates.dt.strftime("%Y-%m-%d")
+        daily = dated.groupby("date")["Revenue"].sum()
+        if not daily.empty:
+            best_date = daily.idxmax()
+            best_sales_day = {"date": best_date, "revenue": round(float(daily.loc[best_date]), 2)}
+
+    start_date = valid_dates.min().strftime("%Y-%m-%d") if not valid_dates.empty else None
+    end_date = valid_dates.max().strftime("%Y-%m-%d") if not valid_dates.empty else None
+    return {
+        "rowCount": int(len(df)),
+        "period": {"start": start_date, "end": end_date, "distinctDays": int(valid_dates.dt.normalize().nunique())},
+        "revenue": round(revenue, 2),
+        "estimatedExpenses": round(float(metrics["expenses"]), 2),
+        "estimatedProfit": round(float(metrics["profit"]), 2),
+        "estimatedCash": round(float(metrics["cash"]), 2),
+        "businessHealth": int(metrics["businessHealth"]),
+        "riskBand": metrics["risk"],
+        "estimationAssumptions": [
+            "The uploaded CSV contains sales only; expenses are estimated as 60% of revenue.",
+            "Cash is estimated as 80% of estimated profit. Neither estimate is an observed statement balance.",
+        ],
+        "products": products,
+        "monthlyRevenue": monthly_revenue,
+        "bestSalesDay": best_sales_day,
+        "limitations": "No verified expenses, cash balances, unit costs, customers, inventory levels, or future forecasts are present in the uploaded sales CSV.",
+    }
 
 
 # ---------------- REQUEST MODELS ----------------
 
 class Question(BaseModel):
-    question: str
+    question: str = Field(min_length=1, max_length=2000)
 
 
 class HiringRequest(BaseModel):
-    employees: int
+    employees: int = Field(ge=0, le=10000)
 
 
 class PriceRequest(BaseModel):
-    percentage: float
+    percentage: float = Field(ge=-100, le=1000, allow_inf_nan=False)
 
 class MarketingRequest(BaseModel):
-    budget: float
+    budget: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
 
 class LoanRequest(BaseModel):
-    loanAmount: float
-    interestRate: float
-    years: int
+    loanAmount: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
+    interestRate: float = Field(ge=0, le=100, allow_inf_nan=False)
+    years: int = Field(ge=1, le=100)
 
 class InventoryRequest(BaseModel):
-    quantity: int
-    costPerUnit: float
-    expectedProfitPerUnit: float
+    quantity: int = Field(ge=0, le=10_000_000)
+    costPerUnit: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
+    expectedProfitPerUnit: float = Field(ge=-1_000_000_000, le=1_000_000_000, allow_inf_nan=False)
 
 class ExpansionRequest(BaseModel):
-    expansionCost: float
-    expectedRevenue: float
-    expectedExpenses: float
+    expansionCost: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
+    expectedRevenue: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
+    expectedExpenses: float = Field(ge=0, le=1_000_000_000, allow_inf_nan=False)
 
 # ---------------- HOME ----------------
 
@@ -76,6 +139,11 @@ def home():
     return {
         "message": "Welcome to SME Decision Simulator Backend!"
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 # ---------------- DASHBOARD ----------------
@@ -130,29 +198,43 @@ def dashboard():
             "lowestRevenueDay": lowest_day
         }
     except Exception as e:
-        return {
-            "error": f"Failed to compute dashboard metrics: {str(e)}"
-        }
+        raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics.") from e
 
 
 # ---------------- CSV UPLOAD ----------------
 
 @app.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
-    global uploaded_data
+    global uploaded_data, uploaded_business_context
 
     try:
-        df = pd.read_csv(file.file)
+        if not file.filename or not file.filename.lower().endswith(".csv"):
+            raise HTTPException(status_code=400, detail="Please upload a .csv file.")
+        raw = await file.read(MAX_UPLOAD_BYTES + 1)
+        if len(raw) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail=f"CSV must be at most {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
+        if not raw:
+            raise HTTPException(status_code=400, detail="The uploaded CSV is empty.")
+        from io import BytesIO
+        df = pd.read_csv(BytesIO(raw))
 
         missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
         if missing:
-            return {
-                "success": False,
-                "error": f"CSV is missing required column(s): {', '.join(missing)}. "
-                         f"Expected columns: {', '.join(REQUIRED_COLUMNS)}."
-            }
+            raise HTTPException(status_code=422, detail=f"CSV is missing required column(s): {', '.join(missing)}. Expected columns: {', '.join(REQUIRED_COLUMNS)}.")
+
+        if df.empty:
+            raise HTTPException(status_code=422, detail="CSV must contain at least one data row.")
+        if len(df) > 500_000:
+            raise HTTPException(status_code=422, detail="CSV cannot contain more than 500,000 rows.")
+        df["Quantity"] = pd.to_numeric(df["Quantity"], errors="coerce")
+        df["Revenue"] = pd.to_numeric(df["Revenue"], errors="coerce")
+        if df[["Quantity", "Revenue"]].isna().any().any() or not np.isfinite(df[["Quantity", "Revenue"]].to_numpy()).all():
+            raise HTTPException(status_code=422, detail="Quantity and Revenue must contain finite numeric values.")
+        if df["Product"].isna().any() or df["Date"].isna().any():
+            raise HTTPException(status_code=422, detail="Date and Product values cannot be empty.")
 
         uploaded_data = df
+        uploaded_business_context = build_business_context(df)
 
         return {
             "success": True,
@@ -163,10 +245,12 @@ async def upload_csv(file: UploadFile = File(...)):
             "preview": uploaded_data.head(5).to_dict(orient="records")
         }
 
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         return {
             "success": False,
-            "error": f"Failed to parse CSV: {str(e)}"
+            "error": "Failed to parse CSV. Check that it is a valid, well-formed CSV file."
         }
 
 
@@ -206,106 +290,24 @@ def chart_data():
             "revenueByProduct": revenue_by_product.to_dict(orient="records")
         }
     except Exception as e:
-        return {
-            "error": f"Failed to compute chart data: {str(e)}"
-        }
+        raise HTTPException(status_code=500, detail="Failed to compute chart data.") from e
 
 
 # ---------------- AI BUSINESS ADVISOR ----------------
 
 @app.post("/ask")
 def ask(question: Question):
-    global uploaded_data
+    global uploaded_data, uploaded_business_context
 
     if uploaded_data is None:
         return {
             "error": "Please upload a CSV before asking AI questions."
         }
 
-    # Greeting handling
-    greetings = [
-        "hi", "hii", "hello", "hey",
-        "good morning", "good afternoon", "good evening"
-    ]
-
-    user_question = question.question.strip().lower()
-
-    if user_question in greetings:
-        return {
-            "answer": """Decision:
-👋 Hello!
-
-Reason:
-I'm your SME Business AI Advisor. I can analyze your uploaded business data and help you make better business decisions.
-
-Recommendations:
-- Ask about hiring employees
-- Ask about pricing strategy
-- Ask about taking a business loan
-- Ask about inventory planning
-- Ask about business expansion
-- Ask about your revenue, profit, cash flow or business health"""
-        }
-
-    metrics = get_business_metrics(uploaded_data)
-
-    revenue = metrics["revenue"]
-    expenses = metrics["expenses"]
-    profit = metrics["profit"]
-    cash = metrics["cash"]
-    business_health = metrics["businessHealth"]
-    risk = metrics["risk"]
-
-    best_selling_product = (
-        uploaded_data.groupby("Product")["Quantity"]
-        .sum()
-        .idxmax()
-    )
-
-    prompt = f"""You are an experienced SME Business Consultant.
-
-Business Summary
-
-Revenue: ₹{int(revenue)}
-Expenses: ₹{int(expenses)}
-Profit: ₹{int(profit)}
-Cash Available: ₹{int(cash)}
-Business Health: {business_health}%
-Risk Level: {risk}
-Best Selling Product: {best_selling_product}
-
-User Question:
-{question.question}
-
-Respond ONLY in the following format.
-
-Decision:
-✅ Approve
-or
-❌ Reject
-
-Reason:
-Maximum 2 short sentences.
-
-Recommendations:
-- Recommendation 1
-- Recommendation 2
-- Recommendation 3
-
-Rules:
-- Maximum 80 words.
-- No introduction.
-- No conclusion.
-- Be concise.
-- Be practical.
-- Do not explain calculations.
-"""
-
-    answer = ask_ai(prompt)
-
-    return {
-        "answer": answer
-    }
+    if uploaded_business_context is None:
+        uploaded_business_context = build_business_context(uploaded_data)
+    answer = ask_business_question(question.question, uploaded_business_context)
+    return {"answer": answer}
 # ---------------- HIRING SIMULATION ----------------
 
 @app.post("/simulate/hiring")
@@ -790,7 +792,7 @@ def download_report_pdf(report_type: str):
             headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
-        return {"error": f"Failed to generate PDF report: {str(e)}"}
+        raise HTTPException(status_code=500, detail="Failed to generate PDF report.") from e
 
 
 @app.get("/reports/{report_type}/csv")
@@ -814,7 +816,7 @@ def download_report_csv(report_type: str):
             headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
-        return {"error": f"Failed to generate CSV report: {str(e)}"}
+        raise HTTPException(status_code=500, detail="Failed to generate CSV report.") from e
 
 
 @app.get("/reports/export-all")
@@ -833,4 +835,4 @@ def export_all_reports():
             headers={"Content-Disposition": 'attachment; filename="SME_Reports.zip"'}
         )
     except Exception as e:
-        return {"error": f"Failed to export reports: {str(e)}"}
+        raise HTTPException(status_code=500, detail="Failed to export reports.") from e
