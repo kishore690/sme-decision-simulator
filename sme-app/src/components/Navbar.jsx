@@ -27,24 +27,24 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
         "sticky top-0 z-40 border-b transition-all duration-300",
         scrolled
           ? dark
-            ? "bg-slate-950/90 backdrop-blur-2xl border-slate-800 shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
-            : "bg-white/90 backdrop-blur-2xl border-gray-200 shadow-sm"
+            ? "bg-slate-950/85 backdrop-blur-xl border-slate-800/80 shadow-sm"
+            : "bg-white/85 backdrop-blur-xl border-white/80 shadow-sm"
           : dark
-          ? "bg-slate-950/70 backdrop-blur-xl border-slate-800/60"
-          : "bg-white/70 backdrop-blur-xl border-gray-200/60"
+          ? "bg-slate-950/70 backdrop-blur-xl border-slate-800/70"
+          : "bg-white/70 backdrop-blur-xl border-white/80"
       )}
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-[60px] flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <button
           onClick={() => setPage("landing")}
-          className="flex items-center gap-2.5 shrink-0 group"
+          className="flex items-center gap-3 shrink-0 group"
         >
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-sm group-hover:shadow-blue-500/25 transition-shadow">
-            <Gauge size={14} className="text-white" />
+          <div className="h-9 w-9 rounded-lg bg-teal-800 flex items-center justify-center transition-colors group-hover:bg-teal-900">
+            <Gauge size={17} className="text-white" />
           </div>
-          <span className={cn("font-semibold tracking-tight text-[14px]", T.text)}>
-            SME<span className={dark ? "text-slate-500" : "text-slate-400"}>/</span>DS
+          <span className={cn("text-sm font-semibold tracking-tight", T.text)}>
+            SME Decision Simulator
           </span>
         </button>
 
@@ -55,11 +55,11 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
               key={key}
               onClick={() => setPage(key)}
               className={cn(
-                "relative px-3.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-200",
+                "relative px-3 py-2 rounded-md text-[13px] font-medium transition-colors duration-150",
                 page === key
                   ? dark
-                    ? "text-white bg-white/8"
-                    : "text-slate-900 bg-slate-100"
+                    ? "text-teal-200 bg-teal-400/10"
+                    : "text-teal-900 bg-teal-50"
                   : dark
                   ? "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/70"
@@ -67,7 +67,7 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
             >
               {label}
               {page === key && (
-                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500" />
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-teal-700" />
               )}
             </button>
           ))}
@@ -77,7 +77,7 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
         <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => setPage("upload")}
-            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 text-white text-[13px] font-medium px-3 py-1.5 hover:opacity-90 transition-opacity shadow-sm shadow-blue-500/20"
+            className="flex items-center gap-1.5 rounded-md bg-teal-800 text-white text-[13px] font-medium px-3.5 py-2 hover:bg-teal-900 transition-colors"
           >
             <Upload size={13} /> Upload
           </button>
@@ -85,8 +85,9 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
             onClick={() => setDark(!dark)}
             className={cn(
               "h-8 w-8 rounded-lg flex items-center justify-center border transition-colors",
-              dark ? "border-slate-700 hover:bg-slate-800 text-slate-400" : "border-gray-200 hover:bg-gray-100 text-slate-500"
+              dark ? "border-slate-700 hover:bg-slate-800 text-slate-400" : "border-slate-300 hover:bg-slate-100 text-slate-600"
             )}
+            aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
           >
             {dark ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} />}
           </button>
@@ -96,6 +97,8 @@ export default function Navbar({ page, setPage, T, dark, setDark, addToast }) {
         <button
           className={cn("lg:hidden h-8 w-8 flex items-center justify-center rounded-lg", T.textMuted)}
           onClick={() => setOpen(!open)}
+          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={open}
         >
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>

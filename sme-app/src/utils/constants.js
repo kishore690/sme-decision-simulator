@@ -37,10 +37,10 @@ export const UPLOAD_TYPES = [
 ];
 
 export const CHAT_SUGGESTIONS = [
-  "Can I hire three employees?",
-  "Should I take a loan?",
-  "What is my biggest financial risk?",
-  "Can I open another branch?",
-  "Should I increase prices?",
+  "Which products contribute most to revenue?",
+  "How did revenue change month to month?",
+  "What data is missing to assess actual profit?",
+  "What risks should I check before hiring?",
+  "What would you analyze before opening another branch?",
 ];
 

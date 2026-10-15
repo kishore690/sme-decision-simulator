@@ -1,0 +1,369 @@
+Date,Product,Quantity,Revenue
+2026-07-01,House Blend Coffee,18,5760
+2026-07-01,Loose Leaf Tea,16,3520
+2026-07-01,Snack Box,12,1980
+2026-07-01,Gift Bundle,4,2560
+2026-07-02,House Blend Coffee,21,6720
+2026-07-02,Loose Leaf Tea,19,4180
+2026-07-02,Snack Box,14,2310
+2026-07-02,Gift Bundle,3,1920
+2026-07-03,House Blend Coffee,25,8000
+2026-07-03,Loose Leaf Tea,15,3300
+2026-07-03,Snack Box,17,2805
+2026-07-03,Gift Bundle,4,2560
+2026-07-04,House Blend Coffee,24,7680
+2026-07-04,Loose Leaf Tea,22,4840
+2026-07-04,Snack Box,16,2640
+2026-07-04,Gift Bundle,6,3840
+2026-07-05,House Blend Coffee,29,9280
+2026-07-05,Loose Leaf Tea,17,3740
+2026-07-05,Snack Box,19,3135
+2026-07-05,Gift Bundle,5,3200
+2026-07-06,House Blend Coffee,18,5760
+2026-07-06,Loose Leaf Tea,17,3740
+2026-07-06,Snack Box,12,1980
+2026-07-06,Gift Bundle,4,2560
+2026-07-07,House Blend Coffee,22,7040
+2026-07-07,Loose Leaf Tea,13,2860
+2026-07-07,Snack Box,15,2475
+2026-07-07,Gift Bundle,4,2560
+2026-07-08,House Blend Coffee,26,8320
+2026-07-08,Loose Leaf Tea,16,3520
+2026-07-08,Snack Box,11,1815
+2026-07-08,Gift Bundle,4,2560
+2026-07-09,House Blend Coffee,21,6720
+2026-07-09,Loose Leaf Tea,19,4180
+2026-07-09,Snack Box,14,2310
+2026-07-09,Gift Bundle,3,1920
+2026-07-10,House Blend Coffee,24,7680
+2026-07-10,Loose Leaf Tea,15,3300
+2026-07-10,Snack Box,16,2640
+2026-07-10,Gift Bundle,4,2560
+2026-07-11,House Blend Coffee,23,7360
+2026-07-11,Loose Leaf Tea,22,4840
+2026-07-11,Snack Box,16,2640
+2026-07-11,Gift Bundle,6,3840
+2026-07-12,House Blend Coffee,28,8960
+2026-07-12,Loose Leaf Tea,17,3740
+2026-07-12,Snack Box,19,3135
+2026-07-12,Gift Bundle,4,2560
+2026-07-13,House Blend Coffee,27,8640
+2026-07-13,Loose Leaf Tea,17,3740
+2026-07-13,Snack Box,12,1980
+2026-07-13,Gift Bundle,4,2560
+2026-07-14,House Blend Coffee,21,6720
+2026-07-14,Loose Leaf Tea,19,4180
+2026-07-14,Snack Box,14,2310
+2026-07-14,Gift Bundle,3,1920
+2026-07-15,House Blend Coffee,25,8000
+2026-07-15,Loose Leaf Tea,15,3300
+2026-07-15,Snack Box,17,2805
+2026-07-15,Gift Bundle,4,2560
+2026-07-16,House Blend Coffee,20,6400
+2026-07-16,Loose Leaf Tea,18,3960
+2026-07-16,Snack Box,13,2145
+2026-07-16,Gift Bundle,5,3200
+2026-07-17,House Blend Coffee,24,7680
+2026-07-17,Loose Leaf Tea,14,3080
+2026-07-17,Snack Box,16,2640
+2026-07-17,Gift Bundle,4,2560
+2026-07-18,House Blend Coffee,22,7040
+2026-07-18,Loose Leaf Tea,21,4620
+2026-07-18,Snack Box,15,2475
+2026-07-18,Gift Bundle,5,3200
+2026-07-19,House Blend Coffee,27,8640
+2026-07-19,Loose Leaf Tea,16,3520
+2026-07-19,Snack Box,18,2970
+2026-07-19,Gift Bundle,4,2560
+2026-07-20,House Blend Coffee,26,8320
+2026-07-20,Loose Leaf Tea,16,3520
+2026-07-20,Snack Box,11,1815
+2026-07-20,Gift Bundle,4,2560
+2026-07-21,House Blend Coffee,21,6720
+2026-07-21,Loose Leaf Tea,19,4180
+2026-07-21,Snack Box,14,2310
+2026-07-21,Gift Bundle,5,3200
+2026-07-22,House Blend Coffee,25,8000
+2026-07-22,Loose Leaf Tea,15,3300
+2026-07-22,Snack Box,16,2640
+2026-07-22,Gift Bundle,4,2560
+2026-07-23,House Blend Coffee,19,6080
+2026-07-23,Loose Leaf Tea,18,3960
+2026-07-23,Snack Box,13,2145
+2026-07-23,Gift Bundle,5,3200
+2026-07-24,House Blend Coffee,23,7360
+2026-07-24,Loose Leaf Tea,14,3080
+2026-07-24,Snack Box,15,2475
+2026-07-24,Gift Bundle,4,2560
+2026-07-25,House Blend Coffee,33,10560
+2026-07-25,Loose Leaf Tea,20,4400
+2026-07-25,Snack Box,15,2475
+2026-07-25,Gift Bundle,5,3200
+2026-07-26,House Blend Coffee,26,8320
+2026-07-26,Loose Leaf Tea,24,5280
+2026-07-26,Snack Box,18,2970
+2026-07-26,Gift Bundle,4,2560
+2026-07-27,House Blend Coffee,25,8000
+2026-07-27,Loose Leaf Tea,16,3520
+2026-07-27,Snack Box,17,2805
+2026-07-27,Gift Bundle,4,2560
+2026-07-28,House Blend Coffee,20,6400
+2026-07-28,Loose Leaf Tea,18,3960
+2026-07-28,Snack Box,13,2145
+2026-07-28,Gift Bundle,5,3200
+2026-07-29,House Blend Coffee,24,7680
+2026-07-29,Loose Leaf Tea,14,3080
+2026-07-29,Snack Box,16,2640
+2026-07-29,Gift Bundle,4,2560
+2026-07-30,House Blend Coffee,18,5760
+2026-07-30,Loose Leaf Tea,17,3740
+2026-07-30,Snack Box,12,1980
+2026-07-30,Gift Bundle,5,3200
+2026-07-31,House Blend Coffee,22,7040
+2026-07-31,Loose Leaf Tea,13,2860
+2026-07-31,Snack Box,15,2475
+2026-07-31,Gift Bundle,4,2560
+2026-08-01,House Blend Coffee,32,10240
+2026-08-01,Loose Leaf Tea,20,4400
+2026-08-01,Snack Box,21,3465
+2026-08-01,Gift Bundle,5,3200
+2026-08-02,House Blend Coffee,25,8000
+2026-08-02,Loose Leaf Tea,23,5060
+2026-08-02,Snack Box,17,2805
+2026-08-02,Gift Bundle,6,3840
+2026-08-03,House Blend Coffee,25,8000
+2026-08-03,Loose Leaf Tea,15,3300
+2026-08-03,Snack Box,16,2640
+2026-08-03,Gift Bundle,4,2560
+2026-08-04,House Blend Coffee,19,6080
+2026-08-04,Loose Leaf Tea,18,3960
+2026-08-04,Snack Box,13,2145
+2026-08-04,Gift Bundle,5,3200
+2026-08-05,House Blend Coffee,23,7360
+2026-08-05,Loose Leaf Tea,14,3080
+2026-08-05,Snack Box,16,2640
+2026-08-05,Gift Bundle,4,2560
+2026-08-06,House Blend Coffee,27,8640
+2026-08-06,Loose Leaf Tea,17,3740
+2026-08-06,Snack Box,12,1980
+2026-08-06,Gift Bundle,4,2560
+2026-08-07,House Blend Coffee,22,7040
+2026-08-07,Loose Leaf Tea,20,4400
+2026-08-07,Snack Box,15,2475
+2026-08-07,Gift Bundle,3,1920
+2026-08-08,House Blend Coffee,31,9920
+2026-08-08,Loose Leaf Tea,19,4180
+2026-08-08,Snack Box,21,3465
+2026-08-08,Gift Bundle,5,3200
+2026-08-09,House Blend Coffee,25,8000
+2026-08-09,Loose Leaf Tea,23,5060
+2026-08-09,Snack Box,17,2805
+2026-08-09,Gift Bundle,6,3840
+2026-08-10,House Blend Coffee,24,7680
+2026-08-10,Loose Leaf Tea,14,3080
+2026-08-10,Snack Box,16,2640
+2026-08-10,Gift Bundle,4,2560
+2026-08-11,House Blend Coffee,19,6080
+2026-08-11,Loose Leaf Tea,17,3740
+2026-08-11,Snack Box,13,2145
+2026-08-11,Gift Bundle,5,3200
+2026-08-12,House Blend Coffee,23,7360
+2026-08-12,Loose Leaf Tea,20,4400
+2026-08-12,Snack Box,15,2475
+2026-08-12,Gift Bundle,4,2560
+2026-08-13,House Blend Coffee,26,8320
+2026-08-13,Loose Leaf Tea,16,3520
+2026-08-13,Snack Box,18,2970
+2026-08-13,Gift Bundle,4,2560
+2026-08-14,House Blend Coffee,21,6720
+2026-08-14,Loose Leaf Tea,19,4180
+2026-08-14,Snack Box,14,2310
+2026-08-14,Gift Bundle,5,3200
+2026-08-15,House Blend Coffee,30,9600
+2026-08-15,Loose Leaf Tea,18,3960
+2026-08-15,Snack Box,20,3300
+2026-08-15,Gift Bundle,5,3200
+2026-08-16,House Blend Coffee,24,7680
+2026-08-16,Loose Leaf Tea,22,4840
+2026-08-16,Snack Box,16,2640
+2026-08-16,Gift Bundle,6,3840
+2026-08-17,House Blend Coffee,23,7360
+2026-08-17,Loose Leaf Tea,14,3080
+2026-08-17,Snack Box,16,2640
+2026-08-17,Gift Bundle,4,2560
+2026-08-18,House Blend Coffee,27,8640
+2026-08-18,Loose Leaf Tea,17,3740
+2026-08-18,Snack Box,12,1980
+2026-08-18,Gift Bundle,4,2560
+2026-08-19,House Blend Coffee,22,7040
+2026-08-19,Loose Leaf Tea,20,4400
+2026-08-19,Snack Box,15,2475
+2026-08-19,Gift Bundle,3,1920
+2026-08-20,House Blend Coffee,26,8320
+2026-08-20,Loose Leaf Tea,16,3520
+2026-08-20,Snack Box,17,2805
+2026-08-20,Gift Bundle,4,2560
+2026-08-21,House Blend Coffee,20,6400
+2026-08-21,Loose Leaf Tea,19,4180
+2026-08-21,Snack Box,14,2310
+2026-08-21,Gift Bundle,5,3200
+2026-08-22,House Blend Coffee,30,9600
+2026-08-22,Loose Leaf Tea,18,3960
+2026-08-22,Snack Box,20,3300
+2026-08-22,Gift Bundle,5,3200
+2026-08-23,House Blend Coffee,34,10880
+2026-08-23,Loose Leaf Tea,21,4620
+2026-08-23,Snack Box,15,2475
+2026-08-23,Gift Bundle,6,3840
+2026-08-24,House Blend Coffee,23,7360
+2026-08-24,Loose Leaf Tea,20,4400
+2026-08-24,Snack Box,15,2475
+2026-08-24,Gift Bundle,4,2560
+2026-08-25,House Blend Coffee,27,8640
+2026-08-25,Loose Leaf Tea,16,3520
+2026-08-25,Snack Box,18,2970
+2026-08-25,Gift Bundle,4,2560
+2026-08-26,House Blend Coffee,21,6720
+2026-08-26,Loose Leaf Tea,19,4180
+2026-08-26,Snack Box,14,2310
+2026-08-26,Gift Bundle,5,3200
+2026-08-27,House Blend Coffee,25,8000
+2026-08-27,Loose Leaf Tea,15,3300
+2026-08-27,Snack Box,17,2805
+2026-08-27,Gift Bundle,4,2560
+2026-08-28,House Blend Coffee,19,6080
+2026-08-28,Loose Leaf Tea,18,3960
+2026-08-28,Snack Box,13,2145
+2026-08-28,Gift Bundle,5,3200
+2026-08-29,House Blend Coffee,29,9280
+2026-08-29,Loose Leaf Tea,17,3740
+2026-08-29,Snack Box,19,3135
+2026-08-29,Gift Bundle,5,3200
+2026-08-30,House Blend Coffee,34,10880
+2026-08-30,Loose Leaf Tea,21,4620
+2026-08-30,Snack Box,15,2475
+2026-08-30,Gift Bundle,5,3200
+2026-08-31,House Blend Coffee,22,7040
+2026-08-31,Loose Leaf Tea,20,4400
+2026-08-31,Snack Box,15,2475
+2026-08-31,Gift Bundle,5,3200
+2026-09-01,House Blend Coffee,26,8320
+2026-09-01,Loose Leaf Tea,16,3520
+2026-09-01,Snack Box,17,2805
+2026-09-01,Gift Bundle,4,2560
+2026-09-02,House Blend Coffee,20,6400
+2026-09-02,Loose Leaf Tea,19,4180
+2026-09-02,Snack Box,14,2310
+2026-09-02,Gift Bundle,5,3200
+2026-09-03,House Blend Coffee,24,7680
+2026-09-03,Loose Leaf Tea,15,3300
+2026-09-03,Snack Box,16,2640
+2026-09-03,Gift Bundle,4,2560
+2026-09-04,House Blend Coffee,28,8960
+2026-09-04,Loose Leaf Tea,18,3960
+2026-09-04,Snack Box,13,2145
+2026-09-04,Gift Bundle,5,3200
+2026-09-05,House Blend Coffee,28,8960
+2026-09-05,Loose Leaf Tea,25,5500
+2026-09-05,Snack Box,19,3135
+2026-09-05,Gift Bundle,4,2560
+2026-09-06,House Blend Coffee,33,10560
+2026-09-06,Loose Leaf Tea,20,4400
+2026-09-06,Snack Box,22,3630
+2026-09-06,Gift Bundle,5,3200
+2026-09-07,House Blend Coffee,21,6720
+2026-09-07,Loose Leaf Tea,19,4180
+2026-09-07,Snack Box,14,2310
+2026-09-07,Gift Bundle,5,3200
+2026-09-08,House Blend Coffee,25,8000
+2026-09-08,Loose Leaf Tea,15,3300
+2026-09-08,Snack Box,17,2805
+2026-09-08,Gift Bundle,4,2560
+2026-09-09,House Blend Coffee,19,6080
+2026-09-09,Loose Leaf Tea,18,3960
+2026-09-09,Snack Box,13,2145
+2026-09-09,Gift Bundle,5,3200
+2026-09-10,House Blend Coffee,24,7680
+2026-09-10,Loose Leaf Tea,14,3080
+2026-09-10,Snack Box,16,2640
+2026-09-10,Gift Bundle,4,2560
+2026-09-11,House Blend Coffee,28,8960
+2026-09-11,Loose Leaf Tea,17,3740
+2026-09-11,Snack Box,18,2970
+2026-09-11,Gift Bundle,4,2560
+2026-09-12,House Blend Coffee,27,8640
+2026-09-12,Loose Leaf Tea,24,5280
+2026-09-12,Snack Box,18,2970
+2026-09-12,Gift Bundle,6,3840
+2026-09-13,House Blend Coffee,32,10240
+2026-09-13,Loose Leaf Tea,19,4180
+2026-09-13,Snack Box,21,3465
+2026-09-13,Gift Bundle,5,3200
+2026-09-14,House Blend Coffee,20,6400
+2026-09-14,Loose Leaf Tea,19,4180
+2026-09-14,Snack Box,14,2310
+2026-09-14,Gift Bundle,5,3200
+2026-09-15,House Blend Coffee,24,7680
+2026-09-15,Loose Leaf Tea,15,3300
+2026-09-15,Snack Box,16,2640
+2026-09-15,Gift Bundle,4,2560
+2026-09-16,House Blend Coffee,29,9280
+2026-09-16,Loose Leaf Tea,18,3960
+2026-09-16,Snack Box,13,2145
+2026-09-16,Gift Bundle,5,3200
+2026-09-17,House Blend Coffee,23,7360
+2026-09-17,Loose Leaf Tea,21,4620
+2026-09-17,Snack Box,15,2475
+2026-09-17,Gift Bundle,4,2560
+2026-09-18,House Blend Coffee,27,8640
+2026-09-18,Loose Leaf Tea,16,3520
+2026-09-18,Snack Box,18,2970
+2026-09-18,Gift Bundle,4,2560
+2026-09-19,House Blend Coffee,26,8320
+2026-09-19,Loose Leaf Tea,24,5280
+2026-09-19,Snack Box,17,2805
+2026-09-19,Gift Bundle,6,3840
+2026-09-20,House Blend Coffee,31,9920
+2026-09-20,Loose Leaf Tea,19,4180
+2026-09-20,Snack Box,21,3465
+2026-09-20,Gift Bundle,5,3200
+2026-09-21,House Blend Coffee,19,6080
+2026-09-21,Loose Leaf Tea,18,3960
+2026-09-21,Snack Box,13,2145
+2026-09-21,Gift Bundle,5,3200
+2026-09-22,House Blend Coffee,24,7680
+2026-09-22,Loose Leaf Tea,21,4620
+2026-09-22,Snack Box,16,2640
+2026-09-22,Gift Bundle,4,2560
+2026-09-23,House Blend Coffee,28,8960
+2026-09-23,Loose Leaf Tea,17,3740
+2026-09-23,Snack Box,18,2970
+2026-09-23,Gift Bundle,4,2560
+2026-09-24,House Blend Coffee,22,7040
+2026-09-24,Loose Leaf Tea,20,4400
+2026-09-24,Snack Box,15,2475
+2026-09-24,Gift Bundle,5,3200
+2026-09-25,House Blend Coffee,26,8320
+2026-09-25,Loose Leaf Tea,16,3520
+2026-09-25,Snack Box,17,2805
+2026-09-25,Gift Bundle,4,2560
+2026-09-26,House Blend Coffee,25,8000
+2026-09-26,Loose Leaf Tea,23,5060
+2026-09-26,Snack Box,17,2805
+2026-09-26,Gift Bundle,6,3840
+2026-09-27,House Blend Coffee,30,9600
+2026-09-27,Loose Leaf Tea,18,3960
+2026-09-27,Snack Box,20,3300
+2026-09-27,Gift Bundle,5,3200
+2026-09-28,House Blend Coffee,29,9280
+2026-09-28,Loose Leaf Tea,18,3960
+2026-09-28,Snack Box,13,2145
+2026-09-28,Gift Bundle,5,3200
+2026-09-29,House Blend Coffee,23,7360
+2026-09-29,Loose Leaf Tea,21,4620
+2026-09-29,Snack Box,15,2475
+2026-09-29,Gift Bundle,4,2560
+2026-09-30,House Blend Coffee,27,8640
+2026-09-30,Loose Leaf Tea,16,3520
+2026-09-30,Snack Box,18,2970
+2026-09-30,Gift Bundle,4,2560

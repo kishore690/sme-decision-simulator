@@ -51,7 +51,7 @@ export function SliderControl({ label, value, min, max, step = 1, suffix = "", o
       </div>
       <div className="relative h-2 rounded-full" style={{ background: T.dark ? "#1e293b" : "#e5e7eb" }}>
         <div
-          className="absolute h-2 rounded-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-150"
+          className="absolute h-2 rounded-full bg-teal-700 transition-all duration-150"
           style={{ width: `${pct}%` }}
         />
         <input

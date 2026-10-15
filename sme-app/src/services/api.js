@@ -1,14 +1,19 @@
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+
+async function fetchJSON(url, options) {
+  const response = await fetch(`${BASE_URL}${url}`, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.detail || data.error || `Request failed (${response.status}).`);
+  return data;
+}
 
 // Dashboard
 export async function getDashboard() {
-  const response = await fetch(`${BASE_URL}/dashboard`);
-  return response.json();
+  return fetchJSON("/dashboard");
 }
 
 export async function getChartData() {
-  const response = await fetch(`${BASE_URL}/chart-data`);
-  return response.json();
+  return fetchJSON("/chart-data");
 }
 
 // Upload
@@ -16,69 +21,59 @@ export async function uploadCSV(file) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${BASE_URL}/upload`, {
+  return fetchJSON("/upload", {
     method: "POST",
     body: formData,
   });
-
-  return response.json();
 }
 
 // AI Advisor
 export async function askAI(question) {
-  const response = await fetch(`${BASE_URL}/ask`, {
+  return fetchJSON("/ask", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ question }),
   });
-
-  return response.json();
 }
 
 // Hiring
 export async function simulateHiring(employees) {
-  const response = await fetch(`${BASE_URL}/simulate/hiring`, {
+  return fetchJSON("/simulate/hiring", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ employees }),
   });
-
-  return response.json();
 }
 
 // Price
 export async function simulatePrice(percentage) {
-  const response = await fetch(`${BASE_URL}/simulate/price`, {
+  return fetchJSON("/simulate/price", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ percentage }),
   });
-
-  return response.json();
 }
 
 // Marketing
 export async function simulateMarketing(budget) {
-  const response = await fetch(`${BASE_URL}/simulate/marketing`, {
+  return fetchJSON("/simulate/marketing", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ budget }),
   });
-
-  return response.json();
 }
 
 // Loan
 export async function simulateLoan(loanAmount, interestRate, loanPeriod) {
-  const response = await fetch(`${BASE_URL}/simulate/loan`, {
+  return fetchJSON("/simulate/loan", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -89,13 +84,11 @@ export async function simulateLoan(loanAmount, interestRate, loanPeriod) {
       years: loanPeriod,
     }),
   });
-
-  return response.json();
 }
 
 // Inventory
 export async function simulateInventory(quantity, costPerUnit, expectedProfitPerUnit) {
-  const response = await fetch(`${BASE_URL}/simulate/inventory`, {
+  return fetchJSON("/simulate/inventory", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -106,8 +99,6 @@ export async function simulateInventory(quantity, costPerUnit, expectedProfitPer
       expectedProfitPerUnit,
     }),
   });
-
-  return response.json();
 }
 
 // Expansion
@@ -116,7 +107,7 @@ export async function simulateExpansion(
   expectedRevenue,
   expectedExpenses
 ) {
-  const response = await fetch(`${BASE_URL}/simulate/expansion`, {
+  return fetchJSON("/simulate/expansion", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -127,8 +118,6 @@ export async function simulateExpansion(
       expectedExpenses,
     }),
   });
-
-  return response.json();
 }
 
 // ---------------- REPORT DOWNLOADS ----------------
@@ -143,7 +132,7 @@ async function fetchReportBlob(url) {
 
   if (!response.ok || contentType.includes("application/json")) {
     const data = await response.json().catch(() => null);
-    throw new Error(data?.error || "Failed to download report.");
+    throw new Error(data?.detail || data?.error || "Failed to download report.");
   }
 
   return response.blob();
