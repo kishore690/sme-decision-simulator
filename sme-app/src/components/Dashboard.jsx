@@ -49,13 +49,13 @@ export default function Dashboard({ T, loading, data, chartData, error }) {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <KPICard T={T} label="Health Score" value={d.score} icon={Gauge} tone="emerald" sub="/ 100" delay={0} />
-          <KPICard T={T} label="Revenue" value={d.revenue} icon={TrendingUp} tone="blue" format={formatLakh} sub="This period" delay={60} />
-          <KPICard T={T} label="Expenses" value={d.expenses} icon={Receipt} tone="amber" format={formatLakh} sub="This period" delay={120} />
-          <KPICard T={T} label="Profit" value={d.profit} icon={DollarSign} tone="emerald" format={formatLakh} sub="Net margin" delay={180} />
-          <KPICard T={T} label="Cash Available" value={d.cash} icon={Wallet} tone="blue" format={formatLakh} sub="On hand" delay={240} />
-          <KPICard T={T} label="Runway" value={d.runway} icon={Clock} tone="blue" format={(v) => `${Math.round(v)} mo`} sub="At current burn" delay={300} />
-          <KPICard T={T} label="Risk Level" value={d.risk} icon={ShieldQuestion} tone={d.risk === "Low" ? "emerald" : d.risk === "High" ? "rose" : "amber"} sub="Overall" delay={360} />
+          <KPICard T={T} label="Estimated Health Score" value={d.score} icon={Gauge} tone="emerald" sub="Assumes expenses are 60% of revenue" delay={0} />
+          <KPICard T={T} label="Revenue" value={d.revenue} icon={TrendingUp} tone="blue" format={formatLakh} sub={d.revenueBasis || "This period"} delay={60} />
+          <KPICard T={T} label="Estimated Expenses" value={d.expenses} icon={Receipt} tone="amber" format={formatLakh} sub="Assumed at 60% of revenue" delay={120} />
+          <KPICard T={T} label="Estimated Profit" value={d.profit} icon={DollarSign} tone="emerald" format={formatLakh} sub="Revenue less estimated expenses" delay={180} />
+          <KPICard T={T} label="Estimated Cash" value={d.cash} icon={Wallet} tone="blue" format={formatLakh} sub="Assumed at 80% of estimated profit" delay={240} />
+          <KPICard T={T} label="Cash Runway" value={d.runway == null ? "—" : d.runway} icon={Clock} tone="blue" format={(v) => `${Math.round(v)} mo`} sub="Requires actual cash and burn data" delay={300} />
+          <KPICard T={T} label="Estimated Risk" value={d.risk} icon={ShieldQuestion} tone={d.risk === "Low" ? "emerald" : d.risk === "High" ? "rose" : "amber"} sub="Based on estimated margin" delay={360} />
         </div>
       )}
 
@@ -66,9 +66,9 @@ export default function Dashboard({ T, loading, data, chartData, error }) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <KPICard T={T} label="Best Selling Product" value={d.bestSellingProduct ?? "—"} icon={Package} tone="blue" sub="By quantity" delay={0} />
-          <KPICard T={T} label="Total Orders" value={d.totalOrders} icon={Hash} tone="blue" sub="This period" delay={40} />
-          <KPICard T={T} label="Total Quantity" value={d.totalQuantity} icon={Boxes} tone="emerald" sub="Units sold" delay={80} />
-          <KPICard T={T} label="Average Revenue" value={d.averageRevenue} icon={TrendingUp} tone="blue" format={formatLakh} sub="Per order" delay={120} />
+          <KPICard T={T} label={d.totalOrdersLabel || "Sales Rows"} value={d.totalOrders} icon={Hash} tone="blue" sub="This period" delay={40} />
+          <KPICard T={T} label="Total Quantity" value={d.totalQuantity} icon={Boxes} tone="emerald" sub={d.quantityBasis || "Recorded units"} delay={80} />
+          <KPICard T={T} label="Average Revenue" value={d.averageRevenue ?? "—"} icon={TrendingUp} tone="blue" format={formatLakh} sub={d.averageRevenueSub || "Per sales row"} delay={120} />
           <KPICard T={T} label="Highest Revenue Day" value={d.highestRevenueDay ?? "—"} icon={CalendarPlus} tone="emerald" sub="Best performing day" delay={160} />
           <KPICard T={T} label="Lowest Revenue Day" value={d.lowestRevenueDay ?? "—"} icon={CalendarMinus} tone="amber" sub="Slowest day" delay={200} />
         </div>

@@ -100,13 +100,13 @@ The included Compose setup serves the built frontend through Nginx and proxies `
 3. From the repository root, run `docker compose up --build -d`.
 4. Open `http://localhost:8080`; check service status with `docker compose ps` and API health at `http://localhost:8080/api/health`.
 
-Set `APP_PORT` to change the published port. `MAX_UPLOAD_BYTES` defaults to 10 MiB. `CORS_ORIGINS` is a comma-separated origin allowlist for direct API access; the bundled same-origin Nginx setup does not require cross-origin access. Do not put production secrets in committed files.
+Set `APP_PORT` to change the published port. `MAX_UPLOAD_BYTES` defaults to 50 MiB. `CORS_ORIGINS` is a comma-separated origin allowlist for direct API access; the bundled same-origin Nginx setup does not require cross-origin access. Do not put production secrets in committed files.
 
 ### Deployment scope
 
-This deployment is a single-instance demonstration deployment. Uploaded CSV data is stored in process memory and shared by all visitors to that backend process; it disappears on restart, and multiple backend replicas would not share it. There is no authentication or tenant isolation. Do not use it with confidential or real customer financial data until authentication, per-user authorization, isolated durable storage, retention/deletion controls, and operational monitoring are implemented. Configure HTTPS at the hosting edge before exposing the service publicly.
+This deployment is a single-instance demonstration deployment. Uploaded sales data is stored in process memory and shared by all visitors to that backend process; it disappears on restart, and multiple backend replicas would not share it. There is no authentication or tenant isolation. Do not use it with confidential or real customer financial data until authentication, per-user authorization, isolated durable storage, retention/deletion controls, and operational monitoring are implemented. Configure HTTPS at the hosting edge before exposing the service publicly.
 
-The backend accepts CSV uploads up to 10 MiB with at most 500,000 rows and validates required columns and numeric values. The browser build uses `/api` in the container; set `VITE_API_BASE_URL` to an absolute API URL when building the frontend for a separate frontend host.
+The backend accepts CSV, TSV, delimited TXT, JSON, XLS, XLSX, XLSM, DOCX, and text-based PDF sales tables up to 50 MiB and 1,000,000 rows. Sales data must include Date, Product, Quantity, and Revenue, or Unit Price so revenue can be calculated. Word and PDF uploads must contain a readable table; scanned PDFs and legacy `.doc` files are not supported. The browser build uses `/api` in the container; set `VITE_API_BASE_URL` to an absolute API URL when building the frontend for a separate frontend host.
 
 ### Local development
 

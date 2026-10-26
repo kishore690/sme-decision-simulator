@@ -1,4 +1,7 @@
 import os
+import re
+from io import BytesIO
+from zipfile import BadZipFile, ZipFile
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +26,7 @@ from reports import (
 )
 app = FastAPI(title="SME Decision Simulator API", version="1.0.0")
 
-# Store uploaded CSV in memory
+# Store uploaded sales data in memory
 uploaded_data = None
 uploaded_business_context = None
 
@@ -39,7 +42,187 @@ app.add_middleware(
 )
 
 REQUIRED_COLUMNS = ["Date", "Product", "Quantity", "Revenue"]
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(50 * 1024 * 1024)))
+MAX_OFFICE_EXPANDED_BYTES = 250 * 1024 * 1024
+MAX_UPLOAD_ROWS = 1_000_000
+SUPPORTED_UPLOAD_EXTENSIONS = {
+    ".csv", ".tsv", ".txt", ".json", ".xlsx", ".xls", ".xlsm", ".docx", ".pdf"
+}
+
+SALES_COLUMN_ALIASES = {
+    "Date": {"date", "orderdate", "invoicedate", "transactiondate", "saledate", "purchasedate", "datetime"},
+    "Product": {"product", "productname", "item", "itemname", "description", "itemdescription", "stockdescription"},
+    "Quantity": {"quantity", "qty", "units", "unitssold", "itemquantity"},
+    "Revenue": {"revenue", "sales", "total", "amount", "linetotal", "salesamount", "totalamount", "netamount", "extendedprice"},
+    "UnitPrice": {"unitprice", "priceperunit", "price", "rate"},
+    "OrderID": {"orderid", "ordernumber", "invoiceno", "invoicenumber", "transactionid", "transactionnumber", "receiptid"},
+}
+
+
+def _column_token(value):
+    return re.sub(r"[^a-z0-9]", "", str(value).casefold())
+
+
+def _column_mapping(columns):
+    source_by_token = {_column_token(column): column for column in columns}
+    mapping = {}
+    for canonical, aliases in SALES_COLUMN_ALIASES.items():
+        for alias in aliases:
+            if alias in source_by_token:
+                mapping[canonical] = source_by_token[alias]
+                break
+    return mapping
+
+
+def _has_sales_headers(columns):
+    mapping = _column_mapping(columns)
+    return all(name in mapping for name in ("Date", "Product", "Quantity")) and (
+        "Revenue" in mapping or "UnitPrice" in mapping
+    )
+
+
+def _validate_office_archive(raw):
+    try:
+        with ZipFile(BytesIO(raw)) as archive:
+            members = archive.infolist()
+            if len(members) > 10_000 or sum(member.file_size for member in members) > MAX_OFFICE_EXPANDED_BYTES:
+                raise HTTPException(status_code=413, detail="The expanded Office document is too large to process safely.")
+    except BadZipFile as exc:
+        raise HTTPException(status_code=422, detail="This Office file is damaged or is not a valid Excel/Word document.") from exc
+
+
+def _frame_from_table(rows):
+    cleaned = [[str(cell).strip() if cell is not None else "" for cell in row] for row in rows]
+    cleaned = [row for row in cleaned if any(value for value in row)]
+    if len(cleaned) < 2:
+        return None
+    headers = cleaned[0]
+    if not _has_sales_headers(headers):
+        return None
+    width = len(headers)
+    return pd.DataFrame([row[:width] + [None] * max(0, width - len(row)) for row in cleaned[1:]], columns=headers)
+
+
+def _read_sales_file(extension, raw):
+    if extension == ".csv":
+        return pd.read_csv(BytesIO(raw), sep=None, engine="python", encoding="utf-8-sig")
+    if extension == ".tsv":
+        return pd.read_csv(BytesIO(raw), sep="\t", encoding="utf-8-sig")
+    if extension == ".txt":
+        return pd.read_csv(BytesIO(raw), sep=None, engine="python", encoding="utf-8-sig")
+    if extension == ".json":
+        return pd.read_json(BytesIO(raw))
+    if extension in {".xlsx", ".xls", ".xlsm"}:
+        if extension == ".xls":
+            return pd.read_excel(BytesIO(raw), engine="xlrd")
+
+        _validate_office_archive(raw)
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(BytesIO(raw), read_only=True, data_only=True)
+        try:
+            for sheet in workbook.worksheets:
+                selected_columns = None
+                records = None
+                for row_number, values in enumerate(sheet.iter_rows(values_only=True), start=1):
+                    if selected_columns is None:
+                        if row_number > 50:
+                            break
+                        headers = [str(value).strip() if value is not None else "" for value in values]
+                        if not _has_sales_headers(headers):
+                            continue
+                        mapping = _column_mapping(headers)
+                        names = ["Date", "Product", "Quantity"]
+                        names.append("Revenue" if "Revenue" in mapping else "UnitPrice")
+                        if "OrderID" in mapping:
+                            names.append("OrderID")
+                        selected_columns = [(name, headers.index(mapping[name])) for name in names]
+                        records = {name: [] for name in names}
+                        continue
+
+                    if not any(value is not None for value in values):
+                        continue
+                    for name, index in selected_columns:
+                        records[name].append(values[index] if index < len(values) else None)
+                    if len(records["Date"]) > MAX_UPLOAD_ROWS:
+                        raise HTTPException(status_code=422, detail=f"Sales files cannot contain more than {MAX_UPLOAD_ROWS:,} rows.")
+
+                if records is not None:
+                    return pd.DataFrame(records)
+        finally:
+            workbook.close()
+        raise HTTPException(status_code=422, detail="The workbook contains no worksheet with recognizable sales columns.")
+    if extension == ".docx":
+        _validate_office_archive(raw)
+        from docx import Document
+
+        document = Document(BytesIO(raw))
+        for table in document.tables:
+            frame = _frame_from_table([[cell.text for cell in row.cells] for row in table.rows])
+            if frame is not None:
+                return frame
+        raise HTTPException(status_code=422, detail="Word files must contain a table with Date, Product, Quantity, and Revenue (or Unit Price) columns.")
+    if extension == ".pdf":
+        import pdfplumber
+
+        with pdfplumber.open(BytesIO(raw)) as document:
+            if len(document.pages) > 100:
+                raise HTTPException(status_code=413, detail="PDF files are limited to 100 pages.")
+            for page in document.pages:
+                for table in page.extract_tables() or []:
+                    frame = _frame_from_table(table)
+                    if frame is not None:
+                        return frame
+        raise HTTPException(status_code=422, detail="PDF must contain a selectable-text sales table. Scanned/image-only PDFs are not supported.")
+    raise HTTPException(
+        status_code=400,
+        detail="Unsupported file type. Use CSV, TSV, TXT, JSON, XLS, XLSX, XLSM, DOCX, or a text-based PDF.",
+    )
+
+
+def _normalize_sales_dataframe(df):
+    if df.empty:
+        raise HTTPException(status_code=422, detail="The uploaded file contains no data rows.")
+
+    mapping = _column_mapping(df.columns)
+    missing = [name for name in ("Date", "Product", "Quantity") if name not in mapping]
+    if "Revenue" not in mapping and not ("UnitPrice" in mapping and "Quantity" in mapping):
+        missing.append("Revenue (or Unit Price)")
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not find required sales columns: {', '.join(missing)}. Include Date, Product, Quantity, and Revenue; Revenue can be calculated from Quantity × Unit Price.",
+        )
+
+    result = df.copy()
+    rename = {source: canonical for canonical, source in mapping.items() if canonical != "UnitPrice"}
+    result = result.rename(columns=rename)
+
+    def numeric_series(series):
+        normalized = series.astype("string").str.strip()
+        negatives = normalized.str.match(r"^\(.*\)$", na=False)
+        normalized = normalized.str.replace(r"[\s,$£€₹]", "", regex=True)
+        normalized.loc[negatives] = "-" + normalized.loc[negatives].str.strip("()")
+        return pd.to_numeric(normalized, errors="coerce")
+
+    result["Quantity"] = numeric_series(result["Quantity"])
+    if "Revenue" not in result.columns:
+        price = numeric_series(result[mapping["UnitPrice"]])
+        result["Revenue"] = result["Quantity"] * price
+    else:
+        result["Revenue"] = numeric_series(result["Revenue"])
+    numeric_values = result[["Quantity", "Revenue"]].to_numpy(dtype=np.float64, na_value=np.nan)
+    if np.isnan(numeric_values).any() or not np.isfinite(numeric_values).all():
+        raise HTTPException(status_code=422, detail="Quantity and Revenue must contain finite numeric values.")
+
+    dates = pd.to_datetime(result["Date"], errors="coerce", dayfirst=True, format="mixed")
+    if dates.isna().any():
+        raise HTTPException(status_code=422, detail="Date contains values that could not be read as dates.")
+    result["Date"] = dates.dt.strftime("%Y-%m-%d")
+    products = result["Product"].astype("string").str.strip().fillna("Unspecified")
+    products = products.mask(products.eq(""), "Unspecified")
+    result["Product"] = products
+    return result
 
 
 def build_business_context(df):
@@ -91,13 +274,13 @@ def build_business_context(df):
         "businessHealth": int(metrics["businessHealth"]),
         "riskBand": metrics["risk"],
         "estimationAssumptions": [
-            "The uploaded CSV contains sales only; expenses are estimated as 60% of revenue.",
+            "The uploaded sales file contains sales only; expenses are estimated as 60% of revenue.",
             "Cash is estimated as 80% of estimated profit. Neither estimate is an observed statement balance.",
         ],
         "products": products,
         "monthlyRevenue": monthly_revenue,
         "bestSalesDay": best_sales_day,
-        "limitations": "No verified expenses, cash balances, unit costs, customers, inventory levels, or future forecasts are present in the uploaded sales CSV.",
+        "limitations": "No verified expenses, cash balances, unit costs, customers, inventory levels, or future forecasts are present in the uploaded sales file.",
     }
 
 
@@ -154,13 +337,24 @@ def dashboard():
 
     if uploaded_data is None:
         return {
-            "error": "No CSV uploaded. Please upload a CSV first."
+            "error": "No sales file uploaded. Please upload a sales file first."
         }
 
     try:
         metrics = get_business_metrics(uploaded_data)
 
-        total_orders = len(uploaded_data)
+        if "OrderID" in uploaded_data.columns:
+            order_ids = uploaded_data["OrderID"].astype("string").str.strip()
+            valid_order_ids = order_ids.notna() & order_ids.ne("")
+            total_orders = int(order_ids.loc[valid_order_ids].nunique())
+            order_count_label = "Distinct Invoices"
+            average_revenue = round(float(uploaded_data.loc[valid_order_ids].assign(_order_id=order_ids[valid_order_ids]).groupby("_order_id")["Revenue"].sum().mean()), 2) if valid_order_ids.any() else None
+            average_revenue_sub = "Per invoice"
+        else:
+            total_orders = len(uploaded_data)
+            order_count_label = "Sales Rows"
+            average_revenue = round(float(uploaded_data["Revenue"].mean()), 2)
+            average_revenue_sub = "Per sales row"
         total_quantity = uploaded_data["Quantity"].sum()
 
         best_selling_product = (
@@ -169,31 +363,27 @@ def dashboard():
             .idxmax()
         )
 
-        average_revenue = round(uploaded_data["Revenue"].mean(), 2)
-
-        highest_day = uploaded_data.loc[
-            uploaded_data["Revenue"].idxmax(),
-            "Date"
-        ]
-
-        lowest_day = uploaded_data.loc[
-            uploaded_data["Revenue"].idxmin(),
-            "Date"
-        ]
+        revenue_by_day = uploaded_data.groupby("Date")["Revenue"].sum()
+        highest_day = revenue_by_day.idxmax() if not revenue_by_day.empty else None
+        lowest_day = revenue_by_day.idxmin() if not revenue_by_day.empty else None
 
         return {
             "businessHealth": metrics["businessHealth"],
-            "revenue": int(metrics["revenue"]),
-            "expenses": int(metrics["expenses"]),
-            "profit": int(metrics["profit"]),
-            "cash": int(metrics["cash"]),
-            "runway": 12,
+            "revenue": round(float(metrics["revenue"]), 2),
+            "expenses": round(float(metrics["expenses"]), 2),
+            "profit": round(float(metrics["profit"]), 2),
+            "cash": round(float(metrics["cash"]), 2),
+            "runway": None,
             "risk": metrics["risk"],
+            "revenueBasis": "Net line revenue; includes negative return/cancellation lines" if (uploaded_data["Revenue"] < 0).any() else "Recorded line revenue",
 
             "totalOrders": total_orders,
-            "totalQuantity": int(total_quantity),
+            "totalOrdersLabel": order_count_label,
+            "totalQuantity": round(float(total_quantity), 2),
+            "quantityBasis": "Net units; negative return/cancellation quantities are included" if (uploaded_data["Quantity"] < 0).any() else "Recorded units",
             "bestSellingProduct": best_selling_product,
             "averageRevenue": average_revenue,
+            "averageRevenueSub": average_revenue_sub,
             "highestRevenueDay": highest_day,
             "lowestRevenueDay": lowest_day
         }
@@ -201,44 +391,31 @@ def dashboard():
         raise HTTPException(status_code=500, detail="Failed to compute dashboard metrics.") from e
 
 
-# ---------------- CSV UPLOAD ----------------
+# ---------------- BUSINESS DATA UPLOAD ----------------
 
 @app.post("/upload")
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_business_file(file: UploadFile = File(...)):
     global uploaded_data, uploaded_business_context
 
     try:
-        if not file.filename or not file.filename.lower().endswith(".csv"):
-            raise HTTPException(status_code=400, detail="Please upload a .csv file.")
+        extension = os.path.splitext(file.filename or "")[1].casefold()
+        if extension not in SUPPORTED_UPLOAD_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="Supported files: CSV, TSV, TXT, JSON, XLS, XLSX, XLSM, DOCX, or text-based PDF.")
         raw = await file.read(MAX_UPLOAD_BYTES + 1)
         if len(raw) > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail=f"CSV must be at most {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
+            raise HTTPException(status_code=413, detail=f"File must be at most {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
         if not raw:
-            raise HTTPException(status_code=400, detail="The uploaded CSV is empty.")
-        from io import BytesIO
-        df = pd.read_csv(BytesIO(raw))
-
-        missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
-        if missing:
-            raise HTTPException(status_code=422, detail=f"CSV is missing required column(s): {', '.join(missing)}. Expected columns: {', '.join(REQUIRED_COLUMNS)}.")
-
-        if df.empty:
-            raise HTTPException(status_code=422, detail="CSV must contain at least one data row.")
-        if len(df) > 500_000:
-            raise HTTPException(status_code=422, detail="CSV cannot contain more than 500,000 rows.")
-        df["Quantity"] = pd.to_numeric(df["Quantity"], errors="coerce")
-        df["Revenue"] = pd.to_numeric(df["Revenue"], errors="coerce")
-        if df[["Quantity", "Revenue"]].isna().any().any() or not np.isfinite(df[["Quantity", "Revenue"]].to_numpy()).all():
-            raise HTTPException(status_code=422, detail="Quantity and Revenue must contain finite numeric values.")
-        if df["Product"].isna().any() or df["Date"].isna().any():
-            raise HTTPException(status_code=422, detail="Date and Product values cannot be empty.")
+            raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+        df = _normalize_sales_dataframe(_read_sales_file(extension, raw))
+        if len(df) > MAX_UPLOAD_ROWS:
+            raise HTTPException(status_code=422, detail=f"Sales files cannot contain more than {MAX_UPLOAD_ROWS:,} rows.")
 
         uploaded_data = df
         uploaded_business_context = build_business_context(df)
 
         return {
             "success": True,
-            "message": "CSV uploaded successfully!",
+            "message": "Business sales file uploaded successfully!",
             "filename": file.filename,
             "rows": len(uploaded_data),
             "columns": list(uploaded_data.columns),
@@ -247,11 +424,8 @@ async def upload_csv(file: UploadFile = File(...)):
 
     except HTTPException:
         raise
-    except Exception:
-        return {
-            "success": False,
-            "error": "Failed to parse CSV. Check that it is a valid, well-formed CSV file."
-        }
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Could not read this file. Make sure it is valid, is not password-protected, and contains a sales table with Date, Product, Quantity, and Revenue (or Unit Price) columns.") from exc
 
 
 # ---------------- CHART DATA ----------------
@@ -262,7 +436,7 @@ def chart_data():
 
     if uploaded_data is None:
         return {
-            "error": "No CSV uploaded. Please upload a CSV first."
+            "error": "No sales file uploaded. Please upload a sales file first."
         }
 
     try:

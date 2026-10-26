@@ -58,24 +58,32 @@ def build_report_data(uploaded_data) -> dict:
     """Build the shared metrics payload used across all report types."""
 
     if uploaded_data is None:
-        raise ValueError("No CSV uploaded. Please upload a CSV first.")
+        raise ValueError("No sales data uploaded. Please upload a sales file first.")
 
     metrics = get_business_metrics(uploaded_data)
 
-    total_orders = len(uploaded_data)
+    if "OrderID" in uploaded_data.columns:
+        order_ids = uploaded_data["OrderID"].astype("string").str.strip()
+        valid_order_ids = order_ids.notna() & order_ids.ne("")
+        total_orders = int(order_ids.loc[valid_order_ids].nunique())
+        total_orders_label = "Distinct Invoices"
+    else:
+        total_orders = len(uploaded_data)
+        total_orders_label = "Sales Rows"
     best_selling_product = (
         uploaded_data.groupby("Product")["Quantity"].sum().idxmax()
     )
 
     return {
-        "revenue": int(metrics["revenue"]),
-        "expenses": int(metrics["expenses"]),
-        "profit": int(metrics["profit"]),
-        "cash": int(metrics["cash"]),
+        "revenue": round(float(metrics["revenue"]), 2),
+        "expenses": round(float(metrics["expenses"]), 2),
+        "profit": round(float(metrics["profit"]), 2),
+        "cash": round(float(metrics["cash"]), 2),
         "businessHealth": metrics["businessHealth"],
         "risk": metrics["risk"],
         "bestSellingProduct": str(best_selling_product),
         "totalOrders": total_orders,
+        "totalOrdersLabel": total_orders_label,
         "dateGenerated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
 
@@ -90,7 +98,7 @@ def _meta_and_rows(report_type: str, data: dict):
         ("Business Health", f"{data['businessHealth']}%"),
         ("Risk Level", data["risk"]),
         ("Best Selling Product", data["bestSellingProduct"]),
-        ("Orders", str(data["totalOrders"])),
+        (data.get("totalOrdersLabel", "Sales Rows"), str(data["totalOrders"])),
         ("Date Generated", data["dateGenerated"]),
     ]
     return meta, rows
