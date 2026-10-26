@@ -15,7 +15,7 @@ const CAPABILITIES = [
   {
     icon: FileSpreadsheet,
     title: "Start with your numbers",
-    text: "Upload a sales CSV or explore the workspace with sample data.",
+    text: "Upload sales data from CSV, Excel, Word, JSON, or PDF, or explore the workspace with sample data.",
   },
   {
     icon: SlidersHorizontal,
@@ -63,7 +63,7 @@ export default function LandingPage({ setPage, T }) {
             </div>
 
             <div className={cn("mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t pt-5 text-xs", T.border, T.textMuted)}>
-              <span className="inline-flex items-center gap-2"><Check size={14} className="text-teal-700" /> CSV upload</span>
+              <span className="inline-flex items-center gap-2"><Check size={14} className="text-teal-700" /> Business file upload</span>
               <span className="inline-flex items-center gap-2"><Check size={14} className="text-teal-700" /> Decision simulations</span>
               <span className="inline-flex items-center gap-2"><Check size={14} className="text-teal-700" /> Downloadable reports</span>
             </div>

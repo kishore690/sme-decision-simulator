@@ -17,7 +17,7 @@ export async function getChartData() {
 }
 
 // Upload
-export async function uploadCSV(file) {
+export async function uploadBusinessFile(file) {
   const formData = new FormData();
   formData.append("file", file);
 

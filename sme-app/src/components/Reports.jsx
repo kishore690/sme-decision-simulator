@@ -29,7 +29,7 @@ export default function Reports({ T, addToast, dashboardData }) {
       title: "Quarterly Report",
       desc: "Trends and quarter-over-quarter comparisons with variance analysis.",
       icon: BarChart3,
-      tag: d ? `${d.totalOrders} orders` : "No data",
+      tag: d ? `${d.totalOrders} ${d.totalOrdersLabel || "sales rows"}` : "No data",
       tagColor: "blue",
     },
     {

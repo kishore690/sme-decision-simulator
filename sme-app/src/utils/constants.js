@@ -29,7 +29,7 @@ export const TIMELINE = [
 ];
 
 export const UPLOAD_TYPES = [
-  { key: "sales", label: "Sales", desc: "Sales CSV", icon: Receipt },
+  { key: "sales", label: "Sales", desc: "Sales data file", icon: Receipt },
   { key: "expenses", label: "Expenses", desc: "Expenses CSV", icon: CreditCard },
   { key: "invoices", label: "Invoices", desc: "Invoices CSV", icon: FileText },
   { key: "bank", label: "Bank Statements", desc: "Bank Statements CSV", icon: FileSpreadsheet },

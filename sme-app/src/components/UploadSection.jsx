@@ -2,7 +2,19 @@ import React, { useState, useRef } from "react";
 import { Upload, Sparkles, Check, CheckCircle2, ArrowRight, AlertCircle, FileText } from "lucide-react";
 import { cn } from "../utils/helpers";
 import { UPLOAD_TYPES } from "../utils/constants";
-import { uploadCSV } from "../services/api";
+import { uploadBusinessFile } from "../services/api";
+
+const ACCEPTED_EXTENSIONS = [".csv", ".tsv", ".txt", ".json", ".xlsx", ".xls", ".xlsm", ".docx", ".pdf"];
+const MAX_FILE_BYTES = 50 * 1024 * 1024;
+
+function validateFile(file) {
+  const name = file.name.toLowerCase();
+  if (!ACCEPTED_EXTENSIONS.some((extension) => name.endsWith(extension))) {
+    return "Supported formats: CSV, TSV, TXT, JSON, Excel, Word (.docx), or a text-based PDF.";
+  }
+  if (file.size > MAX_FILE_BYTES) return "Files must be 50 MB or smaller.";
+  return null;
+}
 
 export default function UploadSection({ T, setPage, addToast, uploaded, setUploaded, onUploaded }) {
   const [dragging, setDragging] = useState(false);
@@ -14,15 +26,11 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
     setError(null);
     setProgress(10);
     try {
-      const result = await uploadCSV(file);
+      const result = await uploadBusinessFile(file);
       setProgress(100);
       if (result.success) {
-        addToast("CSV uploaded successfully");
-        const all = {};
-        UPLOAD_TYPES.forEach(type => {
-          all[type.key] = true;
-        });
-        setUploaded(all);
+        addToast("Sales data uploaded successfully");
+        setUploaded((current) => ({ ...current, sales: true }));
         if (onUploaded) await onUploaded();
         setTimeout(() => {
           setProgress(null);
@@ -52,13 +60,11 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
       if (!sampleResponse.ok) throw new Error("Could not download the sample dataset.");
       const csv = await sampleResponse.text();
       const file = new File([csv], "sme-demo-sales.csv", { type: "text/csv" });
-      const result = await uploadCSV(file);
+      const result = await uploadBusinessFile(file);
       setProgress(100);
       if (!result.success) throw new Error(result.error || "Could not load the demo dataset.");
 
-      const all = {};
-      UPLOAD_TYPES.forEach((t) => (all[t.key] = true));
-      setUploaded(all);
+      setUploaded((current) => ({ ...current, sales: true }));
       if (onUploaded) await onUploaded();
       addToast("Demo sales data loaded");
       setTimeout(() => {
@@ -76,20 +82,16 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
     setDragging(false);
     const file = e.dataTransfer.files[0];
     if (!file) return;
-    if (!file.name.endsWith(".csv")) {
-      setError("Only CSV files are supported. Please drop a valid CSV file.");
-      return;
-    }
+    const validationError = validateFile(file);
+    if (validationError) return setError(validationError);
     uploadToBackend(file);
   };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.name.endsWith(".csv")) {
-      setError("Only CSV files are supported.");
-      return;
-    }
+    const validationError = validateFile(file);
+    if (validationError) return setError(validationError);
     uploadToBackend(file);
   };
 
@@ -100,7 +102,7 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
       <div className="text-center mb-10">
         <h1 className={cn("text-3xl font-semibold tracking-tight", T.text)}>Upload your business data</h1>
         <p className={cn("mt-2 text-sm", T.textMuted)}>
-          Upload your own sales CSV, or use the sample file to explore the dashboard and simulations.
+          Upload a sales table from CSV, Excel, Word, JSON, or PDF. Include Date, Product, Quantity, and Revenue (or Unit Price).
         </p>
       </div>
 
@@ -117,7 +119,7 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
             : T.dark ? "border-slate-700 hover:border-slate-600" : "border-gray-300 hover:border-gray-400"
         )}
       >
-        <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
+        <input ref={fileRef} type="file" accept={ACCEPTED_EXTENSIONS.join(",")} className="hidden" onChange={handleFile} />
 
         {progress !== null ? (
           <div className="space-y-4">
@@ -143,9 +145,9 @@ export default function UploadSection({ T, setPage, addToast, uploaded, setUploa
               <Upload size={22} className={T.accentBlue} />
             </div>
             <p className={cn("font-medium text-sm", T.text)}>
-              {dragging ? "Drop your CSV here" : "Drag & drop a CSV file here"}
+              {dragging ? "Drop your business file here" : "Drag & drop a business file here"}
             </p>
-            <p className={cn("text-xs mt-1", T.textMuted)}>or click to browse — max 10 MB</p>
+            <p className={cn("text-xs mt-1", T.textMuted)}>CSV, TSV, TXT, JSON, XLS/XLSX/XLSM, DOCX, or text-based PDF — max 50 MB</p>
             <button
               onClick={(e) => { e.stopPropagation(); demo(); }}
               className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-800 text-white text-xs font-medium hover:bg-teal-900 transition-colors"
